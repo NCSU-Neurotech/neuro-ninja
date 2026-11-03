@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Neuro Ninja</title>
+  <meta name="description" content="Slice fruit by looking at it: an SSVEP brain-computer interface game for the NeuroPawn Knight Board.">
+  <link rel="stylesheet" href="css/game.css">
+</head>
+<body>
+  <main id="menu">
+    <header class="hero">
+      <h1 class="logo"><span class="logo-a">Neuro</span> <span class="logo-b">Ninja</span></h1>
+      <p class="tag">Slice fruit by looking at it. A brain–computer interface game for the NeuroPawn Knight Board.</p>
+    </header>
+
+    <div class="cards">
+      <section class="card" aria-labelledby="hConn">
+        <h2 id="hConn"><span class="step">1</span>Connect</h2>
+        <label class="field"><span>Source</span>
+          <select id="selSource" autocomplete="off">
+            <option value="serial">Knight Board (USB)</option>
+            <option value="sim">Simulator (no board)</option>
+          </select>
+        </label>
+        <div class="field" id="portRow"><span>Port</span>
+          <div class="row">
+            <select id="selPort" autocomplete="off" aria-label="Port"></select>
+            <button type="button" class="btn icon" id="btnRefresh" title="Refresh the port list" aria-label="Refresh the port list">↻</button>
+          </div>
+        </div>
+        <label class="field"><span>Board</span>
+          <select id="selBoard" autocomplete="off">
+            <option value="knight">Knight Board</option>
+            <option value="imu">Knight Board IMU</option>
+          </select>
+        </label>
+        <label class="field"><span>Gain</span>
+          <select id="selGain" autocomplete="off">
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+            <option value="4">4 (dry electrodes)</option><option value="6">6</option><option value="8">8</option>
+            <option value="12">12 (gel or paste)</option>
+          </select>
+        </label>
+        <label class="field"><span>Mains</span>
+          <select id="selMains" autocomplete="off">
+            <option value="60">60 Hz (Americas)</option>
+            <option value="50">50 Hz (Europe, most of Asia)</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" id="chkRld" autocomplete="off"> RLD on (cuts mains hum)</label>
+        <button type="button" class="btn primary" id="btnConnect">Connect</button>
+        <p class="status" id="connStatus" role="status">Not connected</p>
+      </section>
+
+      <section class="card" aria-labelledby="hElec">
+        <h2 id="hElec"><span class="step">2</span>Electrodes</h2>
+        <p class="help">Tick the channels whose electrodes sit on the <b>back of the head</b> (O1, Oz, O2, PO3, PO4, P3, P4…). Only those can see the flicker.</p>
+        <div class="chans" id="chans" role="group" aria-label="Channels on the back of the head"></div>
+        <div class="row presets">
+          <button type="button" class="btn small" data-preset="spread">Channels 5–8</button>
+          <button type="button" class="btn small" data-preset="all">All 8</button>
+        </div>
+        <p class="help small">With NeuroPawn's 10-20 spread, channels 5–8 are P3, P4, O1 and O2. With the SSVEP layout, all 8 are on the back.</p>
+      </section>
+
+      <section class="card" aria-labelledby="hPlay">
+        <h2 id="hPlay"><span class="step">3</span>Play</h2>
+        <div class="modes" role="radiogroup" aria-label="Game" id="modeList"></div>
+        <label class="field"><span>Flicker rates</span>
+          <select id="selRates" autocomplete="off">
+            <option value="alphafree">12 · 13 · 14 · 15 Hz · fewer phantom slices</option>
+            <option value="visualizer">7.5 · 8.57 · 10 · 12 Hz · your 92–100% set</option>
+          </select>
+        </label>
+        <label class="field"><span>Decision window</span>
+          <select id="selWindow" autocomplete="off">
+            <option value="1.5">1.5 s · faster, less sure</option>
+            <option value="2">2 s · recommended</option>
+            <option value="3">3 s · slower, surer</option>
+          </select>
+        </label>
+        <button type="button" class="btn play" id="btnPlay" disabled>Play</button>
+        <p class="status" id="playStatus" role="status"></p>
+      </section>
+
+      <section class="card checks" aria-labelledby="hCheck">
+        <h2 id="hCheck"><span class="step">4</span>Test your signal</h2>
+        <p class="help small" id="checkFor"></p>
+        <div class="check-grid">
+          <div class="check-col">
+            <h3>Calibrate <span class="dur">about 1 minute</span></h3>
+            <p class="help">Look at a dot in the middle for 20 seconds, then at each tile when it gets a red outline. After that, the games judge every tile against your own resting brain activity. That stops a tile from being picked when you aren't choosing anything, most of all a 10 Hz tile, where your alpha rhythm sits.</p>
+            <p class="status" id="calibStatus" role="status"></p>
+            <label class="check"><input type="checkbox" id="chkUseCalib" autocomplete="off"> Use calibration in games and tests</label>
+            <button type="button" class="btn primary" id="btnCalib" disabled>Calibrate</button>
+          </div>
+          <div class="check-col">
+            <h3>Accuracy test <span class="dur" id="testDur">about 1 minute</span></h3>
+            <p class="help">A red outline shows where to look, and the game checks whether it picked that tile. Guessing gets 25%. Run it before playing to see how well your electrodes are working today.</p>
+            <label class="field"><span>Length</span>
+              <select id="selTestLen" autocomplete="off">
+                <option value="3">12 looks</option>
+                <option value="5">20 looks · more reliable</option>
+              </select>
+            </label>
+            <p class="status" id="testStatus" role="status"></p>
+            <button type="button" class="btn primary" id="btnTest" disabled>Start test</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="how" aria-labelledby="hHow">
+      <h2 id="hHow">How to play</h2>
+      <p class="help">In every game, <b>four tiles flicker</b> in the corners of the screen, each at its own rate (12, 13, 14 and 15 times a second, or 7.5 to 12 with the other rate set). Look straight at a tile and your visual cortex starts pulsing at its rate. The blue ring around the tile fills as the game gets sure, then it counts as a pick.</p>
+      <dl class="howto">
+        <div><dt>🍉 Fruit Slice</dt><dd>Fruit lands on a tile: look at it to slice it. Don't look at bombs. A dropped fruit or a sliced bomb costs a life, and three ends the game. Quick slices score 2, and 5 in a row adds +5.</dd></div>
+        <div><dt>🍊 Fruit Zen</dt><dd>The same, for 90 seconds, with no bombs and no lives.</dd></div>
+        <div><dt>🔨 Whack-a-Mole</dt><dd>Moles pop out of the holes: look at one to whack it before it ducks. Golden moles score 3. Whacking a bunny costs 5 seconds. 60 seconds, and the moles get quicker as the clock runs down.</dd></div>
+        <div><dt>🎵 Simon</dt><dd>The tiles light up one after another while they're still. Then they flicker and you repeat the sequence by looking at each in turn. One more step every round, three mistakes and it's over. The results show your pick accuracy.</dd></div>
+        <div><dt>🧀 Maze</dt><dd>The tiles are arrows. Look at one to send the mouse that way: it runs to the next fork on its own. Reach the cheese, and the next maze is bigger. 3 minutes.</dd></div>
+      </dl>
+      <p class="help">Sit still and keep your jaw relaxed; blinking is fine. <b>Esc</b> or <b>Space</b> pauses. In the simulator, point the mouse at a tile instead of looking at it.</p>
+    </section>
+
+    <footer class="foot">
+      <p>Uses the same decoder as EXG Visualizer+ (filter-bank CCA, 2 s windows). Close EXG Visualizer+ and any other program using the board before connecting: only one can hold the port.</p>
+      <p>Not affiliated with NeuroPawn. Not a medical device. Keys: Space pause · M mute.</p>
+    </footer>
+  </main>
+
+  <div id="stage" hidden>
+    <canvas id="game" aria-label="Game"></canvas>
+    <div class="overlay" id="pauseOverlay" hidden>
+      <div class="panel">
+        <h2>Paused</h2>
+        <p id="pauseReason"></p>
+        <div class="row">
+          <button type="button" class="btn play" id="btnResume">Resume</button>
+          <button type="button" class="btn" id="btnQuit">Quit to menu</button>
+        </div>
+      </div>
+    </div>
+    <div class="overlay" id="overOverlay" hidden>
+      <div class="panel">
+        <h2 id="overTitle">Game over</h2>
+        <p class="bigscore" id="overScore">0</p>
+        <p class="newbest" id="overBest"></p>
+        <dl class="stats" id="overStats"></dl>
+        <div class="row">
+          <button type="button" class="btn play" id="btnAgain">Play again</button>
+          <button type="button" class="btn" id="btnMenu">Menu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <dialog class="warn" id="warn" aria-labelledby="hWarn">
+    <h2 id="hWarn">⚠ Epilepsy warning</h2>
+    <p>This game shows tiles that flicker 7.5 to 15 times per second. Flicker in this range can trigger seizures in people with photosensitive epilepsy, and can cause headaches, eye strain or nausea in others.</p>
+    <ul>
+      <li>Don't play if you have epilepsy or have ever had a seizure.</li>
+      <li>Stop right away if you feel unwell. <b>Esc</b> stops the flicker immediately.</li>
+    </ul>
+    <p class="fine">Fisher et al. (2005), Epilepsia 46:1426. Not a medical device.</p>
+    <div class="row end">
+      <button type="button" class="btn" id="warnCancel">Cancel</button>
+      <button type="button" class="btn play" id="warnOk">I understand, start</button>
+    </div>
+  </dialog>
+
+  <script src="js/lib/core.js"></script>
+  <script src="js/lib/dsp.js"></script>
+  <script src="js/lib/knight.js"></script>
+  <script src="js/lib/ports.js"></script>
+  <script src="js/lib/simulator.js"></script>
+  <script src="js/lib/linalg.js"></script>
+  <script src="js/lib/methods.js"></script>
+  <script src="js/eeg.js"></script>
+  <script src="js/sfx.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/modes/fruit.js"></script>
+  <script src="js/modes/moles.js"></script>
+  <script src="js/modes/simon.js"></script>
+  <script src="js/modes/maze.js"></script>
+  <script src="js/calib.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
