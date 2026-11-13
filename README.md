@@ -20,9 +20,9 @@ It's a separate app from EXG Visualizer+, with its own launcher, but uses the sa
 |---|---|---|
 | 🍉 **Fruit Slice** | Fruit lands on a tile: look at it to slice it. Don't look at bombs. Fruit stays 7 s at first, down to 3.8 s, and more appear at once as you score. 1 point a fruit, 2 if quick, +5 for every 5 in a row. | A dropped fruit or a sliced bomb costs a life; 3 lives |
 | 🍊 **Fruit Zen** | The same, with no bombs and no lives. | 90 s |
-| 🔨 **Whack-a-Mole** | Moles pop out of the holes: look at one to whack it before it ducks. Golden moles score 3, quick whacks +1, 5 in a row +3. Bunnies pop up too: whacking one costs 5 seconds. Moles stay up 4.5 s at first and 2.6 s by the end, and two can be up at once after 12 s. | 60 s |
+| 🔨 **Whack-a-Mole** | Moles pop out of the holes: look at one to whack it before it ducks. Golden moles score 3, quick whacks +1, 5 in a row +3. Bunnies pop up too: whacking one costs 5 seconds. Moles stay up 6 s at first and 4 s by the end, and two can be up at once after 12 s. | 60 s |
 | 🎵 **Simon** | The tiles light up one after another, with the flicker off so you can just watch. Then they flicker and you repeat the sequence by looking at each in turn. One step longer each round. Each pick is a trial with a known answer, so the results show your real **pick accuracy**. | 3 mistakes |
-| 🧀 **Maze** | The tiles are arrows: top-left up, top-right right, bottom-right down, bottom-left left. Look at one and the mouse runs that way, round bends, until the next fork, so a long corridor costs one look. Arrows into a wall are faded and can't be picked. Each cheese scores 10 + 2 per level, and the next maze is bigger (5×4 up to 12×8). | 3 min |
+| 🧀 **Maze** | The tiles are arrows: top-left up, top-right right, bottom-right down, bottom-left left. Look at one and the mouse moves one square that way. Going straight on means looking at the same arrow again, which takes a little longer (see How it decodes). Arrows into a wall are faded and can't be picked. Each cheese scores 10 + 2 per level, and the next maze is bigger (4×3 up to 9×6). | 3 min |
 
 In every game:
 
@@ -114,7 +114,7 @@ None of this has been tried on a real Knight Board yet. Real alpha is usually st
 ## The flicker
 
 - Each tile's brightness follows a sine wave computed from every frame's own timestamp and corrected for the screen's gamma, so any rate works on any monitor and a dropped frame doesn't shift the timing (as in EXG Visualizer+).
-- **Whatever is on a tile flickers with it** (fruit, moles, the Simon disc, maze arrows). You look at the thing on the tile, and the centre of your gaze is where most of the response comes from. A still picture on a flickering tile would block the strongest part, so its colours are dimmed and brightened in step with the tile.
+- **Whatever is on a tile flickers with it** (fruit, moles, the Simon disc, maze arrows). You look at the thing on the tile, and the centre of your gaze is where most of the response comes from. A still picture on a flickering tile would block the strongest part, so its colours are dimmed and brightened in step with the tile. A dark picture would still flicker only weakly, so the moles are pale with thin outlines, the hole is pale, and the maze arrows are outlines: nearly all of each tile swings from black to white. On the real board, the first versions (dark moles and holes, solid black arrows) gave a weak signal.
 - Nothing else flashes. Explosions grow and fade without strobing, and the aim ring and time bar sit outside the tiles.
 - Background work (decoding) runs straight after a frame is drawn so it can't delay the next one, and the screen's refresh rate and any late frames are shown at the bottom.
 

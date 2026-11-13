@@ -1,13 +1,11 @@
-/* Maze: the four tiles become arrows. Look at one to send the mouse that
-   way; it runs along the corridor, round bends, until it reaches a fork, a
-   dead end or the cheese, so a long corridor costs one look, not ten.
-   Arrows that point into a wall can't be picked. Each maze is bigger than
-   the last. 3 minutes. */
+/* Maze: the four tiles become arrows. Look at one and the mouse moves one
+   square that way. Arrows that point into a wall can't be picked. Each maze
+   is bigger than the last. 3 minutes. */
 (function (NP) {
   'use strict';
 
   const DURATION = 180;
-  const CELL_S = 0.085;          // time to run one cell
+  const CELL_S = 0.2;            // time to move one square
   const N = 1, E = 2, S = 4, W = 8;
   // Per tile index: k0 top-left = up, k3 top-right = right, k1 bottom-right = down, k2 bottom-left = left.
   const DIRS = [
@@ -16,7 +14,8 @@
     { dx: -1, dy: 0, wall: W, back: E, angle: Math.PI, name: 'Left' },
     { dx: 1, dy: 0, wall: E, back: W, angle: 0, name: 'Right' },
   ];
-  const SIZES = [[5, 4], [6, 4], [7, 5], [8, 5], [9, 6], [10, 6], [11, 7], [12, 8]];
+  // Small, since every square costs a look (about 2–3 s each).
+  const SIZES = [[4, 3], [5, 3], [5, 4], [6, 4], [7, 5], [8, 5], [9, 6]];
 
   /* Perfect maze (one path between any two cells) by depth-first carving. */
   function makeMaze(cols, rows) {
@@ -83,25 +82,7 @@
     }
 
     open(x, y, d) { return !(this.maze.walls[y][x] & d.wall); }
-    openings(x, y) { let n = 0; for (const d of DIRS) if (this.open(x, y, d)) n++; return n; }
     isLive(k) { return !this.run && this.celebrate <= 0 && this.open(this.pos.x, this.pos.y, DIRS[k]); }
-
-    /* Cells the mouse passes through: on along corridors and round bends,
-       stopping at a fork, a dead end or the cheese. */
-    route(k) {
-      const m = this.maze, cells = [];
-      let { x, y } = this.pos, d = DIRS[k];
-      for (let guard = 0; guard < m.cols * m.rows; guard++) {
-        x += d.dx; y += d.dy;
-        cells.push({ x, y });
-        if (x === m.goal[0] && y === m.goal[1]) break;
-        if (this.openings(x, y) !== 2) break;
-        const next = DIRS.find((n) => this.open(x, y, n) && n.wall !== d.back);
-        if (!next) break;
-        d = next;
-      }
-      return cells;
-    }
 
     onPick(k) {
       if (!this.isLive(k)) return;
@@ -111,7 +92,8 @@
       this.hint = '';
       g.ring(k, '160,210,255');
       g.sfx.whiff();
-      this.run = { cells: this.route(k), i: 0, t: 0, from: { x: this.pos.x, y: this.pos.y } };
+      const d = DIRS[k];
+      this.run = { cells: [{ x: this.pos.x + d.dx, y: this.pos.y + d.dy }], i: 0, t: 0, from: { x: this.pos.x, y: this.pos.y } };
     }
 
     update(gdt) {
@@ -214,14 +196,17 @@
 
     hasContent() { return true; }
 
-    /* A big arrow on each tile. It flickers with the tile; arrows into a
-       wall are drawn faint. */
+    /* A big outlined arrow on each tile. Only the outline is dark, so the
+       middle of the tile, where the player looks, flickers at full
+       strength. Arrows into a wall are drawn faint. */
     drawContent(ctx, k, r) {
       const d = DIRS[k], ok = this.isLive(k) || (this.run && this.open(this.pos.x, this.pos.y, d));
-      const L = r.s * 0.26, T = r.s * 0.11;
+      const L = r.s * 0.3, T = r.s * 0.12;
       ctx.translate(r.cx, r.cy);
       ctx.rotate(d.angle);
-      ctx.fillStyle = ok ? '#262626' : '#d9d9d9';
+      ctx.strokeStyle = ok ? '#262626' : '#d4d4d4';
+      ctx.lineWidth = Math.max(2, r.s * 0.022);
+      ctx.lineJoin = 'round';
       ctx.beginPath();
       ctx.moveTo(L, 0);
       ctx.lineTo(L * 0.1, -L * 0.8);
@@ -231,7 +216,7 @@
       ctx.lineTo(L * 0.1, T);
       ctx.lineTo(L * 0.1, L * 0.8);
       ctx.closePath();
-      ctx.fill();
+      ctx.stroke();
     }
 
     summaryRows() {
@@ -244,5 +229,5 @@
     }
   }
 
-  NP.modes.maze = { cls: MazeMode, name: 'Maze', icon: '🧀', blurb: '3 minutes. Look at the arrows to run the mouse through bigger and bigger mazes to the cheese.' };
+  NP.modes.maze = { cls: MazeMode, name: 'Maze', icon: '🧀', blurb: '3 minutes. Look at an arrow to move the mouse one square, through bigger and bigger mazes to the cheese.' };
 })(window.NP);

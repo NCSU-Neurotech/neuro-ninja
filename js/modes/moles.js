@@ -10,12 +10,14 @@
   const GRACE_S = 1.0;          // a bunny can't be whacked in its first second
   const FIRST_S = 2.0;
 
-  /* A cartoon mole, drawn once per size (there is no mole emoji). */
+  /* A cartoon mole, drawn once per size (there is no mole emoji). Pale
+     colours with thin dark outlines: the mole sits where the player looks,
+     and a dark mole there would block most of the flicker they see. */
   function moleSprite(px, gold) {
     const c = document.createElement('canvas');
     c.width = c.height = px;
     const g = c.getContext('2d'), s = px;
-    const body = gold ? '#e8b53a' : '#7b5232', edge = gold ? '#a87a1c' : '#4e321d', face = gold ? '#fff0b8' : '#d3a676';
+    const body = gold ? '#fff0a8' : '#f6e8d2', edge = gold ? '#9a6f12' : '#5a3a22', face = gold ? '#fffdf0' : '#fffaf2';
     g.fillStyle = body;
     g.strokeStyle = edge;
     g.lineWidth = s * 0.025;
@@ -88,7 +90,8 @@
 
     get timeLeft() { return DURATION - this.g.gt - this.penalty; }
     get progress() { return Math.min(1, this.g.gt / DURATION); }
-    get upTime() { return 4.5 - 1.9 * this.progress; }
+    // Long enough for a real head: a pick takes about 3 s from a cold start.
+    get upTime() { return 6 - 2 * this.progress; }
     get maxUp() { return this.g.gt < 12 ? 1 : 2; }
 
     live(c) { return c.state === 'rising' || c.state === 'up'; }
@@ -180,11 +183,15 @@
       return 1;
     }
 
+    /* The hole is a pale ellipse with a thin rim, so nearly the whole tile
+       flickers at full strength. */
     drawContent(ctx, k, r) {
       const g = this.g, c = this.at(k);
       const holeY = r.y + r.s * 0.76, rx = r.s * 0.37, ry = r.s * 0.1;
-      ctx.fillStyle = '#2e1c10';
-      ctx.beginPath(); ctx.ellipse(r.cx, holeY, rx, ry, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ddd3c6';
+      ctx.strokeStyle = '#5a3a22';
+      ctx.lineWidth = Math.max(2, r.s * 0.012);
+      ctx.beginPath(); ctx.ellipse(r.cx, holeY, rx, ry, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
       if (c) {
         const z = g.size * 0.95, up = this.upAmount(c);
         const spr = c.type === 'bunny' ? g.emoji('🐰') : c.type === 'gold' ? this.gold : this.mole;
@@ -198,8 +205,7 @@
         }
         ctx.restore();
       }
-      ctx.strokeStyle = '#7a5534';
-      ctx.lineWidth = ry * 0.7;
+      // Front rim over the mole, so it comes out of the hole.
       ctx.beginPath(); ctx.ellipse(r.cx, holeY, rx, ry, 0, 0.05, Math.PI - 0.05); ctx.stroke();
     }
 
